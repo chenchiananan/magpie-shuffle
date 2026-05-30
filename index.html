@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>分隊工具</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;500;700&family=Space+Mono:wght=400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #0f0f13;
@@ -154,6 +154,8 @@
       cursor: grab; user-select: none; transition: all 0.15s;
     }
     .member-chip:hover { border-color: var(--accent); }
+    /* 💡 新增手機選取中樣式 */
+    .member-chip.selected { border-color: var(--accent) !important; background: var(--surface2) !important; box-shadow: 0 0 10px var(--accent); }
     .member-chip.dragging { opacity: 0.35; }
     .member-chip.repeat { border-color: #f7a26a; }
     .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
@@ -187,7 +189,6 @@
     <div class="step" id="step2" onclick="goStep(2)">02 分隊結果</div>
   </div>
 
-  <!-- Step 1: 四格輸入 -->
   <div class="panel active" id="panel-1">
     <div class="role-grid">
       <div class="role-box m1">
@@ -251,7 +252,6 @@
     <button class="btn btn-primary" onclick="startGenerate()">⚡ 自動分隊</button>
   </div>
 
-  <!-- Step 2: 分隊結果 -->
   <div class="panel" id="panel-2">
     <div class="round-tabs">
       <button class="round-tab active" id="rtab-0" onclick="switchRound(0)">第一輪</button>
@@ -264,10 +264,10 @@
       <button class="btn btn-ghost btn-sm" onclick="goStep(1)">← 返回</button>
     </div>
     <div id="repeat-warn" style="display:none" class="hint-box warn">
-      ⚠️ 有人與前一輪同隊，標記為橘色。可拖曳名牌互換微調。
+      ⚠️ 有人與前一輪同隊，標記為橘色。手機操作：點選名牌再點選目標即可換位。
     </div>
     <div class="teams-grid" id="teams-grid"></div>
-    <div class="hint-box" style="margin-top:1rem">💡 拖曳名牌可在隊伍之間互換位置。</div>
+    <div class="hint-box" style="margin-top:1rem">💡 提示：電腦可用滑鼠拖曳名牌；手機可直接「先點隊員，再點目標」進行智慧換位。</div>
   </div>
 </div>
 
@@ -279,6 +279,7 @@
   let players = []; // { name, role }
   let rounds  = [];
   let currentRound = 0;
+  let selectedChip = null; // 💡 紀錄手機端目前選取的名牌
 
   // ── Step nav ──
   function goStep(n) {
@@ -294,7 +295,7 @@
   // ── Live count update ──
   function parseTextarea(id) {
     return document.getElementById(id).value
-      .split(/[\n,，、]+/)
+      .split(/[\n,，、\s]+/)
       .map(n => n.trim())
       .filter(n => n.length > 0);
   }
@@ -342,6 +343,7 @@
     rounds = [];
     for (let r = 0; r < 3; r++) rounds.push(makeRound(r));
     currentRound = 0;
+    selectedChip = null;
     goStep(2);
     switchRound(0);
   }
@@ -364,7 +366,6 @@
 
   function tryDistribute(byRole, nTeams) {
     const teams = Array.from({length: nTeams}, ()=>[]);
-    // Each role: shuffle then deal round-robin to teams
     for (const role of ROLES) {
       const sh = shuffle([...byRole[role]]);
       sh.forEach((name, i) => teams[i % nTeams].push(name));
@@ -373,7 +374,6 @@
   }
 
   function roleBalance(teams) {
-    // Score: how well each team meets the target composition (m1×1 m2×1 fa×2 fd×2)
     const TARGET = { m1:1, m2:1, fa:2, fd:2 };
     let score = 0;
     teams.forEach(team => {
@@ -444,9 +444,12 @@
         const members = team.filter(n=>getRole(n)===role);
         const chips = members.map(name => {
           const rep = isRepeat(name, r, ti);
-          return `<div class="member-chip${rep?' repeat':''}" draggable="true"
+          const isSel = selectedChip && selectedChip.name === name && selectedChip.round === r;
+          // 💡 綁定 onclick="onChipClick(event)"
+          return `<div class="member-chip${rep?' repeat':''}${isSel?' selected':''}" draggable="true"
             data-name="${name}" data-round="${r}" data-team="${ti}"
-            ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
+            ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"
+            onclick="onChipClick(event)">
             <span class="chip-dot ${role}"></span>${name}${rep?'<span class="repeat-tag">重複</span>':''}
           </div>`;
         }).join('');
@@ -456,10 +459,12 @@
         </div>`;
       }).join('');
 
+      // 💡 綁定 onclick="onTeamCardClick(event, ${r}, ${ti})"
       return `
         <div class="team-card ${TEAM_CLASSES[ti]}" data-team="${ti}"
           ondragover="onDragOver(event)" ondrop="onDrop(event,${r},${ti})"
-          ondragleave="this.classList.remove('drag-over')">
+          ondragleave="this.classList.remove('drag-over')"
+          onclick="onTeamCardClick(event, ${r}, ${ti})">
           <div class="team-header">
             <div class="team-name">${TEAM_NAMES[ti]}</div>
             <div class="team-stat">${statParts}</div>
@@ -471,6 +476,7 @@
 
   function switchRound(r) {
     currentRound = r;
+    selectedChip = null; // 切換輪次時清空選取
     [0,1,2].forEach(i=>document.getElementById('rtab-'+i).classList.toggle('active',i===r));
     renderRound(r);
     checkRepeats();
@@ -482,7 +488,71 @@
     document.getElementById('repeat-warn').style.display = has?'block':'none';
   }
 
-  // ── Drag & Drop ──
+  // ── 💡 新增：手機端點選互動邏輯 ──
+  function onChipClick(e) {
+    e.stopPropagation(); // 阻止事件冒泡到 team-card
+    const chip = e.currentTarget;
+    const name = chip.dataset.name;
+    const round = parseInt(chip.dataset.round);
+    const team = parseInt(chip.dataset.team);
+
+    if (!selectedChip) {
+      // 第一次點選：標記選取
+      selectedChip = { name, round, team };
+      renderRound(round);
+    } else {
+      // 第二次點選
+      if (selectedChip.name === name && selectedChip.round === round) {
+        // 點到同一個人：取消選取
+        selectedChip = null;
+        renderRound(round);
+      } else if (selectedChip.round === round) {
+        // 點到同輪的不同人：直接互換位置！
+        const from = rounds[round][selectedChip.team];
+        const to   = rounds[round][team];
+        const idxFrom = from.indexOf(selectedChip.name);
+        const idxTo   = to.indexOf(name);
+        
+        if (idxFrom !== -1 && idxTo !== -1) {
+          from[idxFrom] = name;
+          to[idxTo] = selectedChip.name;
+          selectedChip = null;
+          renderRound(round);
+          checkRepeats();
+        }
+      } else {
+        // 點到不同輪：重置
+        selectedChip = null;
+        renderRound(round);
+      }
+    }
+  }
+
+  function onTeamCardClick(e, round, toTeam) {
+    if (!selectedChip) return;
+    if (selectedChip.round !== round) return;
+    if (selectedChip.team === toTeam) {
+      // 點擊同隊空白處：取消選取
+      selectedChip = null;
+      renderRound(round);
+      return;
+    }
+
+    // 點選名牌後點擊別隊空白處：將該隊員移過去
+    const from = rounds[round][selectedChip.team];
+    const to   = rounds[round][toTeam];
+    const idx  = from.indexOf(selectedChip.name);
+    
+    if (idx !== -1) {
+      from.splice(idx, 1);
+      to.push(selectedChip.name);
+      selectedChip = null;
+      renderRound(round);
+      checkRepeats();
+    }
+  }
+
+  // ── Drag & Drop (電腦滑鼠維持原樣) ──
   let dragName=null, dragFromRound=null, dragFromTeam=null;
   function onDragStart(e) {
     const chip = e.target.closest('.member-chip');
@@ -510,10 +580,11 @@
     } else {
       from.splice(idx,1); to.push(dragName);
     }
+    selectedChip = null;
     renderRound(round); checkRepeats();
   }
 
-  function reshuffleRound() { rounds[currentRound]=makeRound(currentRound); renderRound(currentRound); checkRepeats(); }
+  function reshuffleRound() { selectedChip = null; rounds[currentRound]=makeRound(currentRound); renderRound(currentRound); checkRepeats(); }
   function reshuffleAll() { if(!confirm('確定重新洗牌三輪？'))return; startGenerate(); }
 </script>
 </body>
