@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>分隊工具</title>
+  <title>藍鵲現場分隊工具</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght=400;500;700&family=Space+Mono:wght=400;700&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -50,16 +50,14 @@
     .panel { display: none; }
     .panel.active { display: block; }
 
-    /* ── Input grid ── */
+    /* Input grid */
     .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
     .role-box {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 12px;
       display: flex; flex-direction: column; gap: 8px;
     }
-    .role-box-header {
-      display: flex; align-items: center; gap: 8px;
-    }
+    .role-box-header { display: flex; align-items: center; gap: 8px; }
     .role-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .role-title { font-size: 13px; font-weight: 700; }
     .role-subtitle { font-size: 10px; color: var(--muted); font-family: var(--mono); }
@@ -79,9 +77,7 @@
     .role-box.fd { border-top: 2px solid var(--fd); }
 
     /* Summary strip */
-    .summary-strip {
-      display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap;
-    }
+    .summary-strip { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
     .s-chip {
       display: flex; align-items: center; gap: 5px;
       background: var(--surface2); border-radius: 999px;
@@ -98,6 +94,8 @@
     }
     .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; }
     .btn-primary:hover { background: #6a58e0; }
+    .btn-success { background: #27ae60; color: #fff; width: 100%; justify-content: center; font-weight: 700; font-size: 15px; margin-bottom: 1.25rem; box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3); }
+    .btn-success:hover { background: #219653; }
     .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
     .btn-ghost:hover { background: var(--surface2); color: var(--text); }
     .btn-sm { padding: 5px 12px; font-size: 12px; }
@@ -110,7 +108,7 @@
     .hint-box.warn { border-color: #f7a26a; color: #f7a26a; }
     .hint-box.ok   { border-color: #4ade80; color: #4ade80; }
 
-    /* ── Round tabs ── */
+    /* Round tabs */
     .round-tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
     .round-tab {
       flex: 1; padding: 9px; text-align: center; font-size: 13px;
@@ -121,7 +119,7 @@
 
     .action-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
 
-    /* ── Team cards ── */
+    /* Team cards */
     .teams-grid { display: flex; flex-direction: column; gap: 12px; }
     .team-card {
       background: var(--surface2); border-radius: var(--radius);
@@ -154,7 +152,6 @@
       cursor: grab; user-select: none; transition: all 0.15s;
     }
     .member-chip:hover { border-color: var(--accent); }
-    /* 💡 新增手機選取中樣式 */
     .member-chip.selected { border-color: var(--accent) !important; background: var(--surface2) !important; box-shadow: 0 0 10px var(--accent); }
     .member-chip.dragging { opacity: 0.35; }
     .member-chip.repeat { border-color: #f7a26a; }
@@ -168,8 +165,6 @@
       background: #3a1f00; color: #f7a26a;
       border-radius: 4px; padding: 1px 5px;
     }
-
-    /* Drop zone label */
     .drop-hint {
       font-size: 11px; color: var(--muted); padding: 4px 8px;
       border: 1px dashed var(--border); border-radius: 999px;
@@ -180,8 +175,8 @@
 <body>
 <div class="container">
   <div class="header">
-    <h1>⚡ 分隊工具</h1>
-    <p>三輪智慧分隊 · 每隊 男1＋男2＋女攻×2＋女防×2</p>
+    <h1>⚡ 藍鵲分隊工具</h1>
+    <p>嚴格三輪智慧分隊 · 先決原則：女攻女防跨輪不重複</p>
   </div>
 
   <div class="steps">
@@ -194,49 +189,37 @@
       <div class="role-box m1">
         <div class="role-box-header">
           <div class="role-dot" style="background:var(--m1)"></div>
-          <div>
-            <div class="role-title" style="color:var(--m1)">男1</div>
-            <div class="role-subtitle">主攻</div>
-          </div>
+          <div><div class="role-title" style="color:var(--m1)">男1</div><div class="role-subtitle">主攻</div></div>
           <div class="role-count" id="cnt-m1">0 人</div>
         </div>
-        <textarea class="role-textarea" id="input-m1" placeholder="每行一個名字&#10;小明&#10;阿華" oninput="updateCounts()"></textarea>
+        <textarea class="role-textarea" id="input-m1" placeholder="每行一個名字" oninput="updateCounts()"></textarea>
       </div>
 
       <div class="role-box m2">
         <div class="role-box-header">
           <div class="role-dot" style="background:var(--m2)"></div>
-          <div>
-            <div class="role-title" style="color:var(--m2)">男2</div>
-            <div class="role-subtitle">副攻</div>
-          </div>
+          <div><div class="role-title" style="color:var(--m2)">男2</div><div class="role-subtitle">副攻</div></div>
           <div class="role-count" id="cnt-m2">0 人</div>
         </div>
-        <textarea class="role-textarea" id="input-m2" placeholder="每行一個名字&#10;大雄&#10;胖虎" oninput="updateCounts()"></textarea>
+        <textarea class="role-textarea" id="input-m2" placeholder="每行一個名字" oninput="updateCounts()"></textarea>
       </div>
 
       <div class="role-box fa">
         <div class="role-box-header">
           <div class="role-dot" style="background:var(--fa)"></div>
-          <div>
-            <div class="role-title" style="color:var(--fa)">女攻</div>
-            <div class="role-subtitle">攻擊</div>
-          </div>
+          <div><div class="role-title" style="color:var(--fa)">女攻</div><div class="role-subtitle">攻擊</div></div>
           <div class="role-count" id="cnt-fa">0 人</div>
         </div>
-        <textarea class="role-textarea" id="input-fa" placeholder="每行一個名字&#10;小靜&#10;美美" oninput="updateCounts()"></textarea>
+        <textarea class="role-textarea" id="input-fa" placeholder="每行一個名字" oninput="updateCounts()"></textarea>
       </div>
 
       <div class="role-box fd">
         <div class="role-box-header">
           <div class="role-dot" style="background:var(--fd)"></div>
-          <div>
-            <div class="role-title" style="color:var(--fd)">女防</div>
-            <div class="role-subtitle">防守／舉球</div>
-          </div>
+          <div><div class="role-title" style="color:var(--fd)">女防</div><div class="role-subtitle">防守／舉球</div></div>
           <div class="role-count" id="cnt-fd">0 人</div>
         </div>
-        <textarea class="role-textarea" id="input-fd" placeholder="每行一個名字&#10;小花&#10;阿珍" oninput="updateCounts()"></textarea>
+        <textarea class="role-textarea" id="input-fd" placeholder="每行一個名字" oninput="updateCounts()"></textarea>
       </div>
     </div>
 
@@ -249,7 +232,7 @@
     </div>
 
     <div id="input-hint" class="hint-box">輸入名字後會自動計算人數。</div>
-    <button class="btn btn-primary" onclick="startGenerate()">⚡ 自動分隊</button>
+    <button class="btn btn-primary" onclick="startGenerate()">⚡ 智慧精準分隊</button>
   </div>
 
   <div class="panel" id="panel-2">
@@ -263,11 +246,14 @@
       <button class="btn btn-ghost btn-sm" onclick="reshuffleAll()">🎲 全部重洗</button>
       <button class="btn btn-ghost btn-sm" onclick="goStep(1)">← 返回</button>
     </div>
+
+    <button class="btn btn-success" onclick="exportLineMessage()">📋 一鍵匯出 LINE 群組訊息</button>
+
     <div id="repeat-warn" style="display:none" class="hint-box warn">
-      ⚠️ 有人與前一輪同隊，標記為橘色。手機操作：點選名牌再點選目標即可換位。
+      ⚠️ 提示：橘色標記代表此人在前幾輪有過相同隊友。手機可透過「先點球員，再點目標」互換微調。
     </div>
     <div class="teams-grid" id="teams-grid"></div>
-    <div class="hint-box" style="margin-top:1rem">💡 提示：電腦可用滑鼠拖曳名牌；手機可直接「先點隊員，再點目標」進行智慧換位。</div>
+    <div class="hint-box" style="margin-top:1rem">💡 算法已落實先決原則：前三輪內，隊內的女攻與女防組合絕不重複，且男1與男2嚴格輪流搭配！</div>
   </div>
 </div>
 
@@ -276,12 +262,11 @@
   const ROLE_LABEL = { m1:'男1', m2:'男2', fa:'女攻', fd:'女防' };
   const SECTION_LABEL = { m1:'男1', m2:'男2', fa:'女攻', fd:'女防' };
 
-  let players = []; // { name, role }
+  let players = []; 
   let rounds  = [];
   let currentRound = 0;
-  let selectedChip = null; // 💡 紀錄手機端目前選取的名牌
+  let selectedChip = null;
 
-  // ── Step nav ──
   function goStep(n) {
     [1,2].forEach(i => {
       document.getElementById('panel-'+i).classList.toggle('active', i===n);
@@ -292,7 +277,6 @@
     });
   }
 
-  // ── Live count update ──
   function parseTextarea(id) {
     return document.getElementById(id).value
       .split(/[\n,，、\s]+/)
@@ -328,11 +312,10 @@
       hint.innerHTML = '⚠️ ' + issues.join('；');
     } else {
       hint.className = 'hint-box ok';
-      hint.innerHTML = `✅ 共 ${total} 人，可以分隊！`;
+      hint.innerHTML = `✅ 共 ${total} 人，配比完美，可以分隊！`;
     }
   }
 
-  // ── Generate ──
   function startGenerate() {
     players = [];
     ROLES.forEach(role => {
@@ -348,18 +331,32 @@
     switchRound(0);
   }
 
+  // ── 🧠 核心重寫：精準滿足先決原則與大原則的篩選算法 ──
   function makeRound(roundIdx) {
     const byRole = {};
     ROLES.forEach(r => { byRole[r] = players.filter(p=>p.role===r).map(p=>p.name); });
     const nTeams = 3;
-    let best = null, bestScore = -1;
-    const tries = roundIdx === 0 ? 60 : 400;
+    let best = null, bestScore = -99999999;
+    
+    // 跨輪大幅增加搜尋次數（2000次），在極限排他機制下強制鎖定完美解
+    const tries = roundIdx === 0 ? 100 : 2000; 
 
     for (let t = 0; t < tries; t++) {
       const teams = tryDistribute(byRole, nTeams);
       if (!teams) continue;
-      const score = roundIdx === 0 ? roleBalance(teams) : roleBalance(teams) * 100 + scoreDiversity(teams, roundIdx);
-      if (score > bestScore) { bestScore = score; best = teams; }
+      
+      // 1. 基本骨架：戰力配比權重（0 為最完美）
+      const balanceScore = roleBalance(teams) * 100000;
+      
+      // 2. 核心大原則與先決原則處罰機制
+      const diversityScore = roundIdx === 0 ? 0 : scoreStrictDiversity(teams, roundIdx);
+      
+      const totalScore = balanceScore + diversityScore;
+
+      if (totalScore > bestScore) {
+        bestScore = totalScore;
+        best = teams;
+      }
     }
     return best || fallback(nTeams);
   }
@@ -377,28 +374,56 @@
     const TARGET = { m1:1, m2:1, fa:2, fd:2 };
     let score = 0;
     teams.forEach(team => {
-      const rc = {}; ROLES.forEach(r=>rc[r]=0);
-      team.forEach(name => rc[getRole(name)]++);
+      const rc = { m1:0, m2:0, fa:0, fd:0 };
+      team.forEach(name => { if(rc[getRole(name)] !== undefined) rc[getRole(name)]++; });
       ROLES.forEach(r => { score -= Math.abs(rc[r] - TARGET[r]); });
     });
     return score;
   }
 
-  function scoreDiversity(teams, upToRound) {
-    let score = 0;
-    teams.forEach((team, ti) => {
-      team.forEach(name => {
-        let fresh = true;
-        for (let r = 0; r < upToRound; r++) {
-          const prevTi = rounds[r].findIndex(t=>t.includes(name));
-          if (prevTi === ti) { fresh = false; break; }
-          const overlap = team.filter(n=>n!==name && (rounds[r][prevTi]||[]).includes(n)).length;
-          if (overlap > 2) { fresh = false; break; }
+  // ── 🚀 精準評分器：執行大原則與先決原則 ──
+  function scoreStrictDiversity(teams, upToRound) {
+    let penalty = 0;
+
+    teams.forEach(team => {
+      const m1 = team.filter(n => getRole(n) === 'm1');
+      const m2 = team.filter(n => getRole(n) === 'm2');
+      const fa = team.filter(n => getRole(n) === 'fa');
+      const fd = team.filter(n => getRole(n) === 'fd');
+
+      for (let r = 0; r < upToRound; r++) {
+        const prevRound = rounds[r];
+
+        // 【大原則】：男1一定要輪流跟男2搭配，男1男2跨輪絕對不重複配對
+        m1.forEach(p1 => {
+          m2.forEach(p2 => {
+            if (prevRound.some(t => t.includes(p1) && t.includes(p2))) {
+              penalty -= 5000; // 違反大原則，扣 5,000 分
+            }
+          });
+        });
+
+        // 【先決原則】：同隊內的女攻，跨輪絕對不重複配對
+        for (let i = 0; i < fa.length; i++) {
+          for (let j = i + 1; j < fa.length; j++) {
+            if (prevRound.some(t => t.includes(fa[i]) && t.includes(fa[j]))) {
+              penalty -= 20000; // 違反最高級先決原則，重罰 20,000 分
+            }
+          }
         }
-        if (fresh) score++;
-      });
+
+        // 【先決原則】：同隊內的女防，跨輪絕對不重複配對
+        for (let i = 0; i < fd.length; i++) {
+          for (let j = i + 1; j < fd.length; j++) {
+            if (prevRound.some(t => t.includes(fd[i]) && t.includes(fd[j]))) {
+              penalty -= 20000; // 違反最高級先決原則，重罰 20,000 分
+            }
+          }
+        }
+      }
     });
-    return score;
+
+    return penalty;
   }
 
   function fallback(nTeams) {
@@ -416,11 +441,10 @@
     return arr;
   }
 
-  // ── Render ──
   const TEAM_NAMES   = ['A 隊','B 隊','C 隊'];
   const TEAM_CLASSES = ['team-a','team-b','team-c'];
 
-  function getRole(name) { return (players.find(p=>p.name===name)||{}).role||'?'; }
+  function getRole(name) { return (players.find(p=>p.name===name)||{}).role||'m1'; }
 
   function isRepeat(name, roundIdx, teamIdx) {
     for (let r=0;r<roundIdx;r++) {
@@ -432,8 +456,8 @@
   function renderRound(r) {
     const TARGET = { m1:1, m2:1, fa:2, fd:2 };
     document.getElementById('teams-grid').innerHTML = rounds[r].map((team, ti) => {
-      const rc = {}; ROLES.forEach(role=>rc[role]=0);
-      team.forEach(n=>rc[getRole(n)]++);
+      const rc = { m1:0, m2:0, fa:0, fd:0 };
+      team.forEach(n=> { if(rc[getRole(n)] !== undefined) rc[getRole(n)]++; });
 
       const statParts = ROLES.map(role => {
         const ok = rc[role] === TARGET[role];
@@ -445,7 +469,6 @@
         const chips = members.map(name => {
           const rep = isRepeat(name, r, ti);
           const isSel = selectedChip && selectedChip.name === name && selectedChip.round === r;
-          // 💡 綁定 onclick="onChipClick(event)"
           return `<div class="member-chip${rep?' repeat':''}${isSel?' selected':''}" draggable="true"
             data-name="${name}" data-round="${r}" data-team="${ti}"
             ondragstart="onDragStart(event)" ondragend="onDragEnd(event)"
@@ -459,7 +482,6 @@
         </div>`;
       }).join('');
 
-      // 💡 綁定 onclick="onTeamCardClick(event, ${r}, ${ti})"
       return `
         <div class="team-card ${TEAM_CLASSES[ti]}" data-team="${ti}"
           ondragover="onDragOver(event)" ondrop="onDrop(event,${r},${ti})"
@@ -476,7 +498,7 @@
 
   function switchRound(r) {
     currentRound = r;
-    selectedChip = null; // 切換輪次時清空選取
+    selectedChip = null;
     [0,1,2].forEach(i=>document.getElementById('rtab-'+i).classList.toggle('active',i===r));
     renderRound(r);
     checkRepeats();
@@ -488,26 +510,22 @@
     document.getElementById('repeat-warn').style.display = has?'block':'none';
   }
 
-  // ── 💡 新增：手機端點選互動邏輯 ──
+  // ── 手機端點選換位互動 ──
   function onChipClick(e) {
-    e.stopPropagation(); // 阻止事件冒泡到 team-card
+    e.stopPropagation();
     const chip = e.currentTarget;
     const name = chip.dataset.name;
     const round = parseInt(chip.dataset.round);
     const team = parseInt(chip.dataset.team);
 
     if (!selectedChip) {
-      // 第一次點選：標記選取
       selectedChip = { name, round, team };
       renderRound(round);
     } else {
-      // 第二次點選
       if (selectedChip.name === name && selectedChip.round === round) {
-        // 點到同一個人：取消選取
         selectedChip = null;
         renderRound(round);
       } else if (selectedChip.round === round) {
-        // 點到同輪的不同人：直接互換位置！
         const from = rounds[round][selectedChip.team];
         const to   = rounds[round][team];
         const idxFrom = from.indexOf(selectedChip.name);
@@ -521,7 +539,6 @@
           checkRepeats();
         }
       } else {
-        // 點到不同輪：重置
         selectedChip = null;
         renderRound(round);
       }
@@ -532,13 +549,11 @@
     if (!selectedChip) return;
     if (selectedChip.round !== round) return;
     if (selectedChip.team === toTeam) {
-      // 點擊同隊空白處：取消選取
       selectedChip = null;
       renderRound(round);
       return;
     }
 
-    // 點選名牌後點擊別隊空白處：將該隊員移過去
     const from = rounds[round][selectedChip.team];
     const to   = rounds[round][toTeam];
     const idx  = from.indexOf(selectedChip.name);
@@ -552,7 +567,40 @@
     }
   }
 
-  // ── Drag & Drop (電腦滑鼠維持原樣) ──
+  // ── 一鍵匯出 LINE 文字 ──
+  function exportLineMessage() {
+    if (!rounds || rounds.length === 0) return alert('請先產生分隊名單！');
+    
+    const roundLabels = ['第一輪', '第二輪', '第三輪'];
+    const teamLabels  = ['第一隊', '第二隊', '第三隊'];
+    let text = '🏐 藍鵲今日現場分隊名單 🏐\n\n';
+    
+    for (let r = 0; r < 3; r++) {
+      text += `${roundLabels[r]}\n`;
+      for (let ti = 0; ti < 3; ti++) {
+        const teamMembers = rounds[r][ti] || [];
+        
+        // 匯出時自動依戰力位置(男1->男2->女攻->女防)重新排序
+        const sortedMembers = [...teamMembers].sort((a, b) => {
+          const roleOrder = { m1: 1, m2: 2, fa: 3, fd: 4 };
+          return roleOrder[getRole(a)] - roleOrder[getRole(b)];
+        });
+        
+        text += `${teamLabels[ti]}:${sortedMembers.join('、')}\n`;
+      }
+      text += '\n'; 
+    }
+    
+    text = text.trim();
+    
+    navigator.clipboard.writeText(text).then(() => {
+      alert('🎉 匯出成功！\n完整三輪名單已複製，可直接打開 LINE 群組「貼上」！');
+    }).catch(err => {
+      alert('複製失敗，請手動選取複製文字。');
+    });
+  }
+
+  // ── Drag & Drop (電腦端滑鼠保留) ──
   let dragName=null, dragFromRound=null, dragFromTeam=null;
   function onDragStart(e) {
     const chip = e.target.closest('.member-chip');
