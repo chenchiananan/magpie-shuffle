@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>分隊工具</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f0f13;
+      --surface: #1a1a22;
+      --surface2: #22222e;
+      --border: #2e2e3e;
+      --text: #e8e8f0;
+      --muted: #6b6b88;
+      --accent: #7c6af7;
+      --radius: 10px;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Noto Sans TC', sans-serif;
+      --m1: #6ab4f7;
+      --m2: #a78bfa;
+      --fa: #f76a8f;
+      --fd: #f7c26a;
+      --team-a: #7c6af7;
+      --team-b: #f76a8f;
+      --team-c: #4ade80;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 1.5rem 1rem 5rem;
+    }
+    .container { max-width: 540px; margin: 0 auto; }
+    .header { margin-bottom: 1.75rem; }
+    .header h1 { font-family: var(--mono); font-size: 20px; color: var(--text); margin-bottom: 4px; }
+    .header p { font-size: 13px; color: var(--muted); }
+
+    .steps { display: flex; margin-bottom: 2rem; }
+    .step {
+      flex: 1; padding: 10px 0; text-align: center;
+      font-size: 12px; font-family: var(--mono); color: var(--muted);
+      border-bottom: 2px solid var(--border); cursor: pointer; transition: all 0.2s;
+    }
+    .step.active { color: var(--accent); border-color: var(--accent); }
+    .step.done   { color: #4ade80; border-color: #4ade80; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Input grid ── */
+    .role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+    .role-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .role-box-header {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .role-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .role-title { font-size: 13px; font-weight: 700; }
+    .role-subtitle { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+    .role-count { font-size: 10px; font-family: var(--mono); color: var(--muted); margin-left: auto; }
+    .role-textarea {
+      width: 100%; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-family: var(--sans); font-size: 13px;
+      padding: 8px 10px; resize: none; outline: none;
+      line-height: 1.8; min-height: 110px;
+    }
+    .role-textarea:focus { border-color: var(--accent); }
+    .role-textarea::placeholder { color: var(--muted); font-size: 12px; }
+    .role-box.m1 { border-top: 2px solid var(--m1); }
+    .role-box.m2 { border-top: 2px solid var(--m2); }
+    .role-box.fa { border-top: 2px solid var(--fa); }
+    .role-box.fd { border-top: 2px solid var(--fd); }
+
+    /* Summary strip */
+    .summary-strip {
+      display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .s-chip {
+      display: flex; align-items: center; gap: 5px;
+      background: var(--surface2); border-radius: 999px;
+      padding: 4px 10px; border: 1px solid var(--border); font-size: 13px;
+    }
+    .s-chip b { color: var(--text); }
+    .s-chip small { color: var(--muted); }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 18px; border-radius: 8px; border: none;
+      font-size: 14px; font-weight: 500; font-family: var(--sans);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; width: 100%; justify-content: center; }
+    .btn-primary:hover { background: #6a58e0; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+    .hint-box {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 13px; color: var(--muted); margin-bottom: 1rem; line-height: 1.6;
+    }
+    .hint-box.warn { border-color: #f7a26a; color: #f7a26a; }
+    .hint-box.ok   { border-color: #4ade80; color: #4ade80; }
+
+    /* ── Round tabs ── */
+    .round-tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; }
+    .round-tab {
+      flex: 1; padding: 9px; text-align: center; font-size: 13px;
+      font-family: var(--mono); border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s;
+    }
+    .round-tab.active { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+
+    .action-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+
+    /* ── Team cards ── */
+    .teams-grid { display: flex; flex-direction: column; gap: 12px; }
+    .team-card {
+      background: var(--surface2); border-radius: var(--radius);
+      padding: 12px 14px; border-left: 3px solid var(--border); transition: background 0.15s;
+    }
+    .team-card.team-a { border-left-color: var(--team-a); }
+    .team-card.team-b { border-left-color: var(--team-b); }
+    .team-card.team-c { border-left-color: var(--team-c); }
+    .team-card.drag-over { background: #1e2a1e; border-left-color: #4ade80 !important; }
+    .team-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .team-name { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+    .team-a .team-name { color: var(--team-a); }
+    .team-b .team-name { color: var(--team-b); }
+    .team-c .team-name { color: var(--team-c); }
+    .team-stat { font-size: 11px; color: var(--muted); }
+    .team-stat .ok  { color: #4ade80; }
+    .team-stat .bad { color: #f7a26a; }
+
+    .team-roster { display: flex; flex-direction: column; gap: 6px; }
+    .role-section { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 28px; }
+    .role-section-label {
+      font-size: 10px; font-family: var(--mono); color: var(--muted);
+      min-width: 48px; letter-spacing: 0.5px;
+    }
+
+    .member-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 999px; font-size: 13px;
+      background: var(--surface); border: 1px solid var(--border);
+      cursor: grab; user-select: none; transition: all 0.15s;
+    }
+    .member-chip:hover { border-color: var(--accent); }
+    .member-chip.dragging { opacity: 0.35; }
+    .member-chip.repeat { border-color: #f7a26a; }
+    .chip-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .chip-dot.m1 { background: var(--m1); }
+    .chip-dot.m2 { background: var(--m2); }
+    .chip-dot.fa { background: var(--fa); }
+    .chip-dot.fd { background: var(--fd); }
+    .repeat-tag {
+      font-size: 9px; font-family: var(--mono);
+      background: #3a1f00; color: #f7a26a;
+      border-radius: 4px; padding: 1px 5px;
+    }
+
+    /* Drop zone label */
+    .drop-hint {
+      font-size: 11px; color: var(--muted); padding: 4px 8px;
+      border: 1px dashed var(--border); border-radius: 999px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>⚡ 分隊工具</h1>
+    <p>三輪智慧分隊 · 每隊 男1＋男2＋女攻×2＋女防×2</p>
+  </div>
+
+  <div class="steps">
+    <div class="step active" id="step1" onclick="goStep(1)">01 輸入名單</div>
+    <div class="step" id="step2" onclick="goStep(2)">02 分隊結果</div>
+  </div>
+
+  <!-- Step 1: 四格輸入 -->
+  <div class="panel active" id="panel-1">
+    <div class="role-grid">
+      <div class="role-box m1">
+        <div class="role-box-header">
+          <div class="role-dot" style="background:var(--m1)"></div>
+          <div>
+            <div class="role-title" style="color:var(--m1)">男1</div>
+            <div class="role-subtitle">主攻</div>
+          </div>
+          <div class="role-count" id="cnt-m1">0 人</div>
+        </div>
+        <textarea class="role-textarea" id="input-m1" placeholder="每行一個名字&#10;小明&#10;阿華" oninput="updateCounts()"></textarea>
+      </div>
+
+      <div class="role-box m2">
+        <div class="role-box-header">
+          <div class="role-dot" style="background:var(--m2)"></div>
+          <div>
+            <div class="role-title" style="color:var(--m2)">男2</div>
+            <div class="role-subtitle">副攻</div>
+          </div>
+          <div class="role-count" id="cnt-m2">0 人</div>
+        </div>
+        <textarea class="role-textarea" id="input-m2" placeholder="每行一個名字&#10;大雄&#10;胖虎" oninput="updateCounts()"></textarea>
+      </div>
+
+      <div class="role-box fa">
+        <div class="role-box-header">
+          <div class="role-dot" style="background:var(--fa)"></div>
+          <div>
+            <div class="role-title" style="color:var(--fa)">女攻</div>
+            <div class="role-subtitle">攻擊</div>
+          </div>
+          <div class="role-count" id="cnt-fa">0 人</div>
+        </div>
+        <textarea class="role-textarea" id="input-fa" placeholder="每行一個名字&#10;小靜&#10;美美" oninput="updateCounts()"></textarea>
+      </div>
+
+      <div class="role-box fd">
+        <div class="role-box-header">
+          <div class="role-dot" style="background:var(--fd)"></div>
+          <div>
+            <div class="role-title" style="color:var(--fd)">女防</div>
+            <div class="role-subtitle">防守／舉球</div>
+          </div>
+          <div class="role-count" id="cnt-fd">0 人</div>
+        </div>
+        <textarea class="role-textarea" id="input-fd" placeholder="每行一個名字&#10;小花&#10;阿珍" oninput="updateCounts()"></textarea>
+      </div>
+    </div>
+
+    <div class="summary-strip" id="summary-strip">
+      <div class="s-chip"><div class="chip-dot m1"></div><b id="s-m1">0</b><small>男1</small></div>
+      <div class="s-chip"><div class="chip-dot m2"></div><b id="s-m2">0</b><small>男2</small></div>
+      <div class="s-chip"><div class="chip-dot fa"></div><b id="s-fa">0</b><small>女攻</small></div>
+      <div class="s-chip"><div class="chip-dot fd"></div><b id="s-fd">0</b><small>女防</small></div>
+      <div class="s-chip" style="margin-left:auto"><b id="s-total">0</b><small>共</small></div>
+    </div>
+
+    <div id="input-hint" class="hint-box">輸入名字後會自動計算人數。</div>
+    <button class="btn btn-primary" onclick="startGenerate()">⚡ 自動分隊</button>
+  </div>
+
+  <!-- Step 2: 分隊結果 -->
+  <div class="panel" id="panel-2">
+    <div class="round-tabs">
+      <button class="round-tab active" id="rtab-0" onclick="switchRound(0)">第一輪</button>
+      <button class="round-tab" id="rtab-1" onclick="switchRound(1)">第二輪</button>
+      <button class="round-tab" id="rtab-2" onclick="switchRound(2)">第三輪</button>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-ghost btn-sm" onclick="reshuffleRound()">🔀 重洗此輪</button>
+      <button class="btn btn-ghost btn-sm" onclick="reshuffleAll()">🎲 全部重洗</button>
+      <button class="btn btn-ghost btn-sm" onclick="goStep(1)">← 返回</button>
+    </div>
+    <div id="repeat-warn" style="display:none" class="hint-box warn">
+      ⚠️ 有人與前一輪同隊，標記為橘色。可拖曳名牌互換微調。
+    </div>
+    <div class="teams-grid" id="teams-grid"></div>
+    <div class="hint-box" style="margin-top:1rem">💡 拖曳名牌可在隊伍之間互換位置。</div>
+  </div>
+</div>
+
+<script>
+  const ROLES = ['m1','m2','fa','fd'];
+  const ROLE_LABEL = { m1:'男1', m2:'男2', fa:'女攻', fd:'女防' };
+  const SECTION_LABEL = { m1:'男1', m2:'男2', fa:'女攻', fd:'女防' };
+
+  let players = []; // { name, role }
+  let rounds  = [];
+  let currentRound = 0;
+
+  // ── Step nav ──
+  function goStep(n) {
+    [1,2].forEach(i => {
+      document.getElementById('panel-'+i).classList.toggle('active', i===n);
+      const s = document.getElementById('step'+i);
+      s.classList.remove('active','done');
+      if (i===n) s.classList.add('active');
+      else if (i<n) s.classList.add('done');
+    });
+  }
+
+  // ── Live count update ──
+  function parseTextarea(id) {
+    return document.getElementById(id).value
+      .split(/[\n,，、]+/)
+      .map(n => n.trim())
+      .filter(n => n.length > 0);
+  }
+
+  function updateCounts() {
+    const counts = {};
+    ROLES.forEach(r => {
+      counts[r] = parseTextarea('input-'+r).length;
+      document.getElementById('cnt-'+r).textContent = counts[r] + ' 人';
+      document.getElementById('s-'+r).textContent = counts[r];
+    });
+    const total = Object.values(counts).reduce((a,b)=>a+b,0);
+    document.getElementById('s-total').textContent = total;
+
+    const nTeams = 3;
+    const hint = document.getElementById('input-hint');
+    if (total === 0) {
+      hint.className = 'hint-box';
+      hint.innerHTML = '輸入名字後會自動計算人數。';
+      return;
+    }
+    const issues = [];
+    if (counts.m1 < nTeams) issues.push(`男1 需至少 ${nTeams} 人（目前 ${counts.m1}）`);
+    if (counts.m2 < nTeams) issues.push(`男2 需至少 ${nTeams} 人（目前 ${counts.m2}）`);
+    if (counts.fa < nTeams*2) issues.push(`女攻 需至少 ${nTeams*2} 人（目前 ${counts.fa}）`);
+    if (counts.fd < nTeams*2) issues.push(`女防 需至少 ${nTeams*2} 人（目前 ${counts.fd}）`);
+
+    if (issues.length > 0) {
+      hint.className = 'hint-box warn';
+      hint.innerHTML = '⚠️ ' + issues.join('；');
+    } else {
+      hint.className = 'hint-box ok';
+      hint.innerHTML = `✅ 共 ${total} 人，可以分隊！`;
+    }
+  }
+
+  // ── Generate ──
+  function startGenerate() {
+    players = [];
+    ROLES.forEach(role => {
+      parseTextarea('input-'+role).forEach(name => players.push({ name, role }));
+    });
+    if (players.length < 3) return alert('請至少輸入 3 人！');
+
+    rounds = [];
+    for (let r = 0; r < 3; r++) rounds.push(makeRound(r));
+    currentRound = 0;
+    goStep(2);
+    switchRound(0);
+  }
+
+  function makeRound(roundIdx) {
+    const byRole = {};
+    ROLES.forEach(r => { byRole[r] = players.filter(p=>p.role===r).map(p=>p.name); });
+    const nTeams = 3;
+    let best = null, bestScore = -1;
+    const tries = roundIdx === 0 ? 60 : 400;
+
+    for (let t = 0; t < tries; t++) {
+      const teams = tryDistribute(byRole, nTeams);
+      if (!teams) continue;
+      const score = roundIdx === 0 ? roleBalance(teams) : roleBalance(teams) * 100 + scoreDiversity(teams, roundIdx);
+      if (score > bestScore) { bestScore = score; best = teams; }
+    }
+    return best || fallback(nTeams);
+  }
+
+  function tryDistribute(byRole, nTeams) {
+    const teams = Array.from({length: nTeams}, ()=>[]);
+    // Each role: shuffle then deal round-robin to teams
+    for (const role of ROLES) {
+      const sh = shuffle([...byRole[role]]);
+      sh.forEach((name, i) => teams[i % nTeams].push(name));
+    }
+    return teams;
+  }
+
+  function roleBalance(teams) {
+    // Score: how well each team meets the target composition (m1×1 m2×1 fa×2 fd×2)
+    const TARGET = { m1:1, m2:1, fa:2, fd:2 };
+    let score = 0;
+    teams.forEach(team => {
+      const rc = {}; ROLES.forEach(r=>rc[r]=0);
+      team.forEach(name => rc[getRole(name)]++);
+      ROLES.forEach(r => { score -= Math.abs(rc[r] - TARGET[r]); });
+    });
+    return score;
+  }
+
+  function scoreDiversity(teams, upToRound) {
+    let score = 0;
+    teams.forEach((team, ti) => {
+      team.forEach(name => {
+        let fresh = true;
+        for (let r = 0; r < upToRound; r++) {
+          const prevTi = rounds[r].findIndex(t=>t.includes(name));
+          if (prevTi === ti) { fresh = false; break; }
+          const overlap = team.filter(n=>n!==name && (rounds[r][prevTi]||[]).includes(n)).length;
+          if (overlap > 2) { fresh = false; break; }
+        }
+        if (fresh) score++;
+      });
+    });
+    return score;
+  }
+
+  function fallback(nTeams) {
+    const all = shuffle(players.map(p=>p.name));
+    const teams = Array.from({length:nTeams},()=>[]);
+    all.forEach((n,i)=>teams[i%nTeams].push(n));
+    return teams;
+  }
+
+  function shuffle(arr) {
+    for (let i=arr.length-1;i>0;i--) {
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  // ── Render ──
+  const TEAM_NAMES   = ['A 隊','B 隊','C 隊'];
+  const TEAM_CLASSES = ['team-a','team-b','team-c'];
+
+  function getRole(name) { return (players.find(p=>p.name===name)||{}).role||'?'; }
+
+  function isRepeat(name, roundIdx, teamIdx) {
+    for (let r=0;r<roundIdx;r++) {
+      if ((rounds[r][teamIdx]||[]).includes(name)) return true;
+    }
+    return false;
+  }
+
+  function renderRound(r) {
+    const TARGET = { m1:1, m2:1, fa:2, fd:2 };
+    document.getElementById('teams-grid').innerHTML = rounds[r].map((team, ti) => {
+      const rc = {}; ROLES.forEach(role=>rc[role]=0);
+      team.forEach(n=>rc[getRole(n)]++);
+
+      const statParts = ROLES.map(role => {
+        const ok = rc[role] === TARGET[role];
+        return `<span class="${ok?'ok':'bad'}">${ROLE_LABEL[role]}×${rc[role]}</span>`;
+      }).join(' ');
+
+      const rosterHtml = ROLES.map(role => {
+        const members = team.filter(n=>getRole(n)===role);
+        const chips = members.map(name => {
+          const rep = isRepeat(name, r, ti);
+          return `<div class="member-chip${rep?' repeat':''}" draggable="true"
+            data-name="${name}" data-round="${r}" data-team="${ti}"
+            ondragstart="onDragStart(event)" ondragend="onDragEnd(event)">
+            <span class="chip-dot ${role}"></span>${name}${rep?'<span class="repeat-tag">重複</span>':''}
+          </div>`;
+        }).join('');
+        return `<div class="role-section">
+          <div class="role-section-label">${SECTION_LABEL[role]}</div>
+          ${chips || '<span class="drop-hint">空</span>'}
+        </div>`;
+      }).join('');
+
+      return `
+        <div class="team-card ${TEAM_CLASSES[ti]}" data-team="${ti}"
+          ondragover="onDragOver(event)" ondrop="onDrop(event,${r},${ti})"
+          ondragleave="this.classList.remove('drag-over')">
+          <div class="team-header">
+            <div class="team-name">${TEAM_NAMES[ti]}</div>
+            <div class="team-stat">${statParts}</div>
+          </div>
+          <div class="team-roster">${rosterHtml}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function switchRound(r) {
+    currentRound = r;
+    [0,1,2].forEach(i=>document.getElementById('rtab-'+i).classList.toggle('active',i===r));
+    renderRound(r);
+    checkRepeats();
+  }
+
+  function checkRepeats() {
+    let has = false;
+    rounds.forEach((round,r)=>round.forEach((team,ti)=>team.forEach(name=>{if(isRepeat(name,r,ti))has=true;})));
+    document.getElementById('repeat-warn').style.display = has?'block':'none';
+  }
+
+  // ── Drag & Drop ──
+  let dragName=null, dragFromRound=null, dragFromTeam=null;
+  function onDragStart(e) {
+    const chip = e.target.closest('.member-chip');
+    dragName = chip.dataset.name;
+    dragFromRound = parseInt(chip.dataset.round);
+    dragFromTeam  = parseInt(chip.dataset.team);
+    chip.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function onDragEnd(e) { document.querySelectorAll('.member-chip').forEach(c=>c.classList.remove('dragging')); }
+  function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+  function onDrop(e, round, toTeam) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    if (dragFromRound!==round || dragFromTeam===toTeam || dragName===null) return;
+    const from = rounds[round][dragFromTeam];
+    const to   = rounds[round][toTeam];
+    const idx  = from.indexOf(dragName);
+    if (idx===-1) return;
+    const target = e.target.closest('.member-chip');
+    if (target && parseInt(target.dataset.team)===toTeam) {
+      const swapName = target.dataset.name;
+      const swapIdx = to.indexOf(swapName);
+      from[idx] = swapName; to[swapIdx] = dragName;
+    } else {
+      from.splice(idx,1); to.push(dragName);
+    }
+    renderRound(round); checkRepeats();
+  }
+
+  function reshuffleRound() { rounds[currentRound]=makeRound(currentRound); renderRound(currentRound); checkRepeats(); }
+  function reshuffleAll() { if(!confirm('確定重新洗牌三輪？'))return; startGenerate(); }
+</script>
+</body>
+</html>
